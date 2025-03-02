@@ -1,38 +1,43 @@
 from typing import Optional, Literal
-from datetime import datetime, timezone
+from datetime import datetime
+from pydantic import BaseModel
 
-from pydantic import BaseModel, StrictFloat, Field
+from sqlmodel import Field, SQLModel
 
 
-class CategoryResponse(BaseModel):
-    id: str
+class Category(SQLModel, table=True):
+    id: Optional[str] = Field(default=None, primary_key=True)
     name: str
     username: str
-    archived: bool
+    archived: bool = Field(default=False)
 
 
-class SpendResponseModel(BaseModel):
-    id: str
-    spendDate: str
-    category: CategoryResponse
-    currency: Literal["RUB", "EUR", "USD", "KZT"]
-    amount: StrictFloat
+class Spend(SQLModel, table=True):
+    id: Optional[str] = Field(default=None, primary_key=True)
+    spendDate: datetime
+    currency: str
+    amount: float
     description: str
-    username: str
+    # category: Category = Relationship()
 
 
-class CategoryRequest(BaseModel):
+class CategoryAdd(BaseModel):
     id: str | None = None
     name: str
     username: str | None = None
     archived: bool | None = None
 
 
-class SpendRequestModel(BaseModel):
+class SpendAdd(BaseModel):
     id: str | None = None
-    spendDate: str = Field(default=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-3]+"Z")
-    category: CategoryRequest
+    spendDate: str
     currency: Literal["RUB", "EUR", "USD", "KZT"]
     amount: float
     description: str
-    username: str | None = None
+    category: CategoryAdd
+
+
+
+
+
+

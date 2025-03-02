@@ -4,45 +4,31 @@ from dotenv import load_dotenv
 from selene import browser
 from clients.spends_client import SpendsHttpClient
 import time
+from databases.spend_db import SpendDb
 from models.auth import Auth
+from models.config import Envs
 from faker import Faker
-from http import HTTPStatus
-
-from models.spend import SpendRequestModel, CategoryRequest, SpendResponseModel
-from models.categories import CategoriesModel
+from models.spend import SpendAdd
+from tests.ui.locators import AuthPage
 
 
 @pytest.fixture(scope="session")
-def envs():
+def envs() -> Envs:
     load_dotenv()
+    return Envs(
+        frontend_url=os.getenv("FRONTEND_URL"),
+        gateway_url=os.getenv("GATEWAY_URL"),
+        spending_url=os.getenv("SPENDING_URL"),
+        profile_url=os.getenv("PROFILE_URL"),
+        spend_db_url=os.getenv("SPENDS_DB_URL"),
+        test_username=os.getenv("TEST_USERNAME"),
+        test_password=os.getenv("TEST_PASSWORD"),
+        login_url=os.getenv("LOGIN_URL")
 
-
-@pytest.fixture(scope="session")
-def frontend_url(envs):
-    return os.getenv("FRONTEND_URL")
-
-
-@pytest.fixture(scope="session")
-def gateway_url(envs):
-    return os.getenv("GATEWAY_URL")
-
-
-@pytest.fixture(scope="session")
-def spending_url(envs):
-    return os.getenv("SPENDING_URL")
+    )
 
 
 @pytest.fixture(scope="function")
-def profile_url(envs):
-    return os.getenv("PROFILE_URL")
-
-
-@pytest.fixture(scope="session")
-def app_user(envs):
-    return os.getenv("TEST_USERNAME"), os.getenv("TEST_PASSWORD")
-
-
-@pytest.fixture(scope="session")
 def fake_user() -> Auth:
     fake = Faker()
     user = Auth(username=fake.first_name(), password=fake.password())
@@ -50,103 +36,92 @@ def fake_user() -> Auth:
 
 
 @pytest.fixture(scope="session")
-def auth(frontend_url, app_user):
-    username, password = app_user
-    browser.open(frontend_url)
-    browser.element('input[name=username]').set_value(username)
-    browser.element('input[name=password]').set_value(password)
-    browser.element('button[type=submit]').click()
-    # получаем токен из Session Storage
-    time.sleep(3)
+def auth(envs):
+    username, password = envs.test_username, envs.test_password
+    browser.open(envs.frontend_url)
+    browser.element(AuthPage.USERNAME).set_value(username)
+    browser.element(AuthPage.PASSWORD).set_value(password)
+    browser.element(AuthPage.LOGIN).click()
+    # получаем токен из Local Storage
+    time.sleep(1)
     id_token = browser.driver.execute_script("return window.localStorage.getItem('id_token');")
     assert id_token is not None
     return id_token
 
 
-@pytest.fixture(scope="session")
-def auth_with_diff_credential(frontend_url, fake_user, request, app_user):
-    browser.open(frontend_url)
+@pytest.fixture(params=[])
+def auth_credential(envs, fake_user, request) -> tuple:
     get_param = request.param
     if get_param:
-        username, password = app_user
+        username, password = envs.test_username, envs.test_password
     else:
         username, password = fake_user.username, fake_user.password
-    browser.element('input[name=username]').set_value(username)
-    browser.element('input[name=password]').set_value(password)
-    browser.element('button[type=submit]').click()
+    yield username, password
 
 
-@pytest.fixture(params=[])
-def category(request, spends_client):
-    category_name = request.param
-    current_categories = spends_client.get_category()
-    if category_name not in [category["name"] for category in current_categories]:
-        spends_client = spends_client.add_category(category_name)
-    return spends_client  # category_name
+# Создание API и DB клиентов
+@pytest.fixture(scope="session")
+def spend_db(envs) -> SpendDb:
+    return SpendDb(envs.spend_db_url)
 
 
 @pytest.fixture(scope="session")
-def spends_client(gateway_url, auth) -> SpendsHttpClient:
-    return SpendsHttpClient(gateway_url, auth)
+def spends_client(envs, auth) -> SpendsHttpClient:
+    return SpendsHttpClient(envs.gateway_url, auth)
 
 
 @pytest.fixture(params=[])
-def spends(request, spends_client):
+def category(request, spends_client, spend_db) -> str:
+    category_name = request.param
+    category = spends_client.add_category(category_name)
+    yield category.name
+    spend_db.delete_category(category.id)
+
+
+@pytest.fixture()
+def category_db_clean(spend_db):
+    yield
+    spend_db.clean_category_db()
+
+
+@pytest.fixture(params=[])
+def spends(request, spends_client) -> SpendAdd:
     spend = spends_client.add_spend(request.param)
     yield spend
-    try:
-        spends_client.remove_spends(spend["id"])
-    except Exception:
-        pass
-
-
-@pytest.fixture()
-def spends_update(spends, spends_client):
-    response = spends_client.update_spends(SpendRequestModel(id=spends["id"],
-                                                             amount=200.51,
-                                                             description='QA-GURU Python ADVANCED 3',
-                                                             category=CategoryRequest(
-                                                                 **{'name': 'school'}).model_dump(),
-                                                             currency="RUB"
-                                                             ).model_dump())
-    return response
-
-
-@pytest.fixture()
-def spends_remove(spends, spends_client):
-    response = spends_client.remove_spends([spends["id"]])
-    return response
-
-
-@pytest.fixture()
-def categories_update(category, spends_client):
-    faker = Faker()
-    response = spends_client.update_categories({"name": faker.text(10),
-                                                "id": category["id"]})
-    yield response
-    try:
-        spends_client.update_categories({"id": category["id"], "archived": True, "name": response["name"]})
-    except Exception:
-        pass
+    all_spends = spends_client.get_spends()
+    if spend.id in [item.id for item in all_spends]:
+        spends_client.remove_spends([spend.id])
 
 
 class Pages:
     main_page = pytest.mark.usefixtures("main_page")
     profile_page = pytest.mark.usefixtures("profile_page")
-    auth_with_not_valid_user = pytest.mark.parametrize("auth_with_diff_credential", [False], indirect=True)
-    auth_with_valid_user = pytest.mark.parametrize("auth_with_diff_credential", [True], indirect=True)
+    login_page = pytest.mark.usefixtures("login_page")
+    spending_page = pytest.mark.usefixtures("spending_page")
 
 
 class TestData:
     category = lambda x: pytest.mark.parametrize("category", [x], indirect=True)
-    spends = lambda x: pytest.mark.parametrize("spends", [x], indirect=True, ids=lambda param: param["description"])
+    spends = lambda x: pytest.mark.parametrize("spends", [x], indirect=True, ids=lambda param: param.description)
+    auth_with_not_valid_user = pytest.mark.parametrize("auth_credential", [False], indirect=True)
+    auth_with_valid_user = pytest.mark.parametrize("auth_credential", [True], indirect=True)
 
 
 @pytest.fixture()
-def main_page(auth, frontend_url):
-    browser.open(frontend_url)
+def main_page(auth, envs):
+    browser.open(envs.frontend_url)
 
 
 @pytest.fixture()
-def profile_page(auth, profile_url):
-    browser.open(profile_url)
+def profile_page(auth, envs):
+    browser.open(envs.profile_url)
+
+
+@pytest.fixture()
+def login_page(envs):
+    browser.open(envs.login_url)
+
+
+@pytest.fixture()
+def spending_page(auth, envs):
+    browser.open(envs.spending_url)
