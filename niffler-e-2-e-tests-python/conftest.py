@@ -5,11 +5,13 @@ from selene import browser
 from clients.spends_client import SpendsHttpClient
 import time
 from databases.spend_db import SpendDb
+from databases.auth_db import AuthDb
 from models.auth import Auth
 from models.config import Envs
 from faker import Faker
 from models.spend import SpendAdd
-from tests.ui.locators import AuthPage
+from tests.ui.locators import LoginLocators
+from models.register_model import RegisterModel
 
 
 @pytest.fixture(scope="session")
@@ -21,9 +23,11 @@ def envs() -> Envs:
         spending_url=os.getenv("SPENDING_URL"),
         profile_url=os.getenv("PROFILE_URL"),
         spend_db_url=os.getenv("SPENDS_DB_URL"),
+        auth_db_url=os.getenv("AUTH_DB_URL"),
         test_username=os.getenv("TEST_USERNAME"),
         test_password=os.getenv("TEST_PASSWORD"),
-        login_url=os.getenv("LOGIN_URL")
+        login_url=os.getenv("LOGIN_URL"),
+        register_url=os.getenv("REGISTER_URL")
 
     )
 
@@ -39,9 +43,9 @@ def fake_user() -> Auth:
 def auth(envs):
     username, password = envs.test_username, envs.test_password
     browser.open(envs.frontend_url)
-    browser.element(AuthPage.USERNAME).set_value(username)
-    browser.element(AuthPage.PASSWORD).set_value(password)
-    browser.element(AuthPage.LOGIN).click()
+    browser.element(LoginLocators.USERNAME).set_value(username)
+    browser.element(LoginLocators.PASSWORD).set_value(password)
+    browser.element(LoginLocators.LOGIN).click()
     # получаем токен из Local Storage
     time.sleep(1)
     id_token = browser.driver.execute_script("return window.localStorage.getItem('id_token');")
@@ -59,10 +63,30 @@ def auth_credential(envs, fake_user, request) -> tuple:
     yield username, password
 
 
+@pytest.fixture(scope="session")
+def register_credential(auth_db) -> RegisterModel:
+    fake = Faker()
+    model = RegisterModel(username=fake.user_name(),
+                          password=fake.password(),
+                          second_password=fake.password())
+    yield model
+    auth_db.clean_users_db()
+
+
+@pytest.fixture(scope="session")
+def register():
+    pass
+
+
 # Создание API и DB клиентов
 @pytest.fixture(scope="session")
 def spend_db(envs) -> SpendDb:
     return SpendDb(envs.spend_db_url)
+
+
+@pytest.fixture(scope="session")
+def auth_db(envs) -> AuthDb:
+    return AuthDb(envs.auth_db_url)
 
 
 @pytest.fixture(scope="session")
@@ -84,6 +108,12 @@ def category_db_clean(spend_db):
     spend_db.clean_category_db()
 
 
+@pytest.fixture()
+def spend_db_clean(spend_db):
+    yield
+    spend_db.clean_category_db()
+
+
 @pytest.fixture(params=[])
 def spends(request, spends_client) -> SpendAdd:
     spend = spends_client.add_spend(request.param)
@@ -98,6 +128,7 @@ class Pages:
     profile_page = pytest.mark.usefixtures("profile_page")
     login_page = pytest.mark.usefixtures("login_page")
     spending_page = pytest.mark.usefixtures("spending_page")
+    register_page = pytest.mark.usefixtures("register_page")
 
 
 class TestData:
@@ -123,5 +154,11 @@ def login_page(envs):
 
 
 @pytest.fixture()
+def register_page(envs):
+    browser.open(envs.register_url)
+
+
+@pytest.fixture()
 def spending_page(auth, envs):
     browser.open(envs.spending_url)
+

@@ -7,6 +7,8 @@ class Envs(BaseModel):
     spending_url: str
     profile_url: str
     spend_db_url: str
+    auth_db_url: str
     test_username: str
     test_password: str
     login_url: str
+    register_url: str

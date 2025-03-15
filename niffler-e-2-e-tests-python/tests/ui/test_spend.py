@@ -1,8 +1,6 @@
-import time
-from selene import browser, have, be
 from conftest import Pages, TestData
 from models.spend import SpendAdd, CategoryAdd
-from tests.ui.locators import MainPage, SpendingPage
+from tests.ui.pages.spending_page import SpendingPage
 
 TEST_CATEGORY = "car"
 
@@ -15,11 +13,11 @@ TEST_CATEGORY = "car"
     currency="RUB",
     category=CategoryAdd(name=TEST_CATEGORY),
     spendDate="2025-03-01T18:39:27.955Z"))
-def test_add_spending(category, spends):
-    browser.driver.refresh()
-    browser.element(SpendingPage.SPENDING).should(have.text(spends.description))
-    browser.element(SpendingPage.SPENDING).should(have.text(str(spends.amount)))
-    browser.element(SpendingPage.SPENDING).should(have.text(spends.category.name))
+def test_add_spending(category, spends, spending_page_object: SpendingPage):
+    spending_page_object.refresh_page()
+    spending_page_object.should_have_expected_text(spends.description)
+    spending_page_object.should_have_expected_text(str(spends.amount))
+    spending_page_object.should_have_expected_text(spends.category.name)
 
 
 @Pages.main_page
@@ -30,14 +28,14 @@ def test_add_spending(category, spends):
                           currency="RUB",
                           spendDate="2025-03-01T18:39:27.955Z"
                           ))
-def test_update_spending(category, spends):
-    browser.driver.refresh()
-    browser.element(MainPage.EDIT_SPEND).click()
-    browser.element(SpendingPage.DESCRIPTION).set_value("Поездка")
-    browser.element(SpendingPage.AMOUNT).set_value("2000")
-    browser.element(SpendingPage.ADD).click()
-    browser.element(SpendingPage.SPENDING).should(have.text("2000"))
-    browser.element(SpendingPage.SPENDING).should(have.text("Поездка"))
+def test_update_spending(category, spends, spending_page_object: SpendingPage):
+    spending_page_object.refresh_page()
+    spending_page_object.click_edit_spend()
+    spending_page_object.fill_description("Поездка")
+    spending_page_object.fill_amount("2000")
+    spending_page_object.click_add()
+    spending_page_object.should_have_expected_text("2000")
+    spending_page_object.should_have_expected_text("Поездка")
 
 
 @Pages.main_page
@@ -48,10 +46,16 @@ def test_update_spending(category, spends):
                           currency="RUB",
                           spendDate="2025-03-01T18:39:27.955Z"
                           ))
-def test_delete_spending(category, spends):
-    browser.driver.refresh()
-    browser.element(SpendingPage.DELETE_BUTTON).should(be.disabled)
-    browser.element(SpendingPage.SPENDING_CHECKBOX).click()
-    browser.element(SpendingPage.DELETE_BUTTON).click()
-    browser.element(SpendingPage.DELETE_MODAL_BUTTON).click()
-    browser.element(SpendingPage.SPENDING).should(have.text("There are no spendings"))
+def test_delete_spending(category, spends, spending_page_object: SpendingPage):
+    spending_page_object.refresh_page()
+    spending_page_object.delete_button_should_be_disabled()
+    spending_page_object.click_checkbox()
+    spending_page_object.click_delete()
+    spending_page_object.click_delete_modal()
+    spending_page_object.success_delete_text()
+
+
+@Pages.spending_page
+def test_error_amount_text(spending_page_object):
+    spending_page_object.add_spending("0", "car", "blabla", "03/15/2025")
+    spending_page_object.not_valid_amount_value_text()

@@ -1,3 +1,4 @@
+import time
 from typing import Sequence
 from sqlalchemy import create_engine, Engine, text
 from sqlmodel import Session, select
@@ -24,5 +25,11 @@ class SpendDb:
 
     def clean_category_db(self):
         with Session(self.engine) as session:
+            session.execute(text('DELETE FROM CATEGORY;'))
+            session.commit()
+
+    def clean_spend_db(self):
+        with Session(self.engine) as session:
+            session.execute(text('DELETE FROM SPEND;'))
             session.execute(text('DELETE FROM CATEGORY;'))
             session.commit()
