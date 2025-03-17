@@ -1,6 +1,7 @@
 from conftest import Pages, TestData
 from models.spend import SpendAdd, CategoryAdd
 from tests.ui.pages.spending_page import SpendingPage
+import pytest
 
 TEST_CATEGORY = "car"
 
