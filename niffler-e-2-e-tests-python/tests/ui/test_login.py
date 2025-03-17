@@ -1,4 +1,7 @@
 from conftest import Pages, TestData
+import pytest
+
+pytestmark = [pytest.mark.allure_label("Login", label_type="epic")]
 
 
 @Pages.login_page

@@ -1,11 +1,12 @@
 from conftest import Pages, TestData
 from tests.ui.pages.profile_page import ProfilePage
 from faker import Faker
+import pytest
 
 fake = Faker()
 TEST_CATEGORY = fake.text(10)
 
-
+pytestmark = [pytest.mark.allure_label("Profile", label_type="epic")]
 @Pages.profile_page
 def test_title_in_page(profile_page_object: ProfilePage):
     profile_page_object.profile_title_text_exist()
