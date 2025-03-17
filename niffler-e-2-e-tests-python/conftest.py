@@ -1,5 +1,8 @@
 import os
+
+import allure
 import pytest
+from pytest import Item, FixtureDef, FixtureRequest
 from dotenv import load_dotenv
 from selene import browser
 from clients.spends_client import SpendsHttpClient
@@ -12,12 +15,15 @@ from faker import Faker
 from models.spend import SpendAdd
 from tests.ui.locators import LoginLocators
 from models.register_model import RegisterModel
+from allure_commons.reporter import AllureReporter
+from allure_commons.types import AttachmentType
+from allure_pytest.listener import AllureListener
 
 
 @pytest.fixture(scope="session")
 def envs() -> Envs:
     load_dotenv()
-    return Envs(
+    envs_instance = Envs(
         frontend_url=os.getenv("FRONTEND_URL"),
         gateway_url=os.getenv("GATEWAY_URL"),
         spending_url=os.getenv("SPENDING_URL"),
@@ -30,6 +36,8 @@ def envs() -> Envs:
         register_url=os.getenv("REGISTER_URL")
 
     )
+    allure.attach(envs_instance.model_dump_json(indent=2), name="envs.json", attachment_type=AttachmentType.JSON)
+    return envs_instance
 
 
 @pytest.fixture(scope="function")
@@ -50,6 +58,7 @@ def auth(envs):
     time.sleep(1)
     id_token = browser.driver.execute_script("return window.localStorage.getItem('id_token');")
     assert id_token is not None
+    allure.attach(id_token, name="token.txt", attachment_type=AttachmentType.TEXT)
     return id_token
 
 
@@ -162,3 +171,22 @@ def register_page(envs):
 def spending_page(auth, envs):
     browser.open(envs.spending_url)
 
+
+@pytest.hookimpl(hookwrapper=True, trylast=True)
+def pytest_runtest_call(item: Item):
+    yield
+    allure.dynamic.title(" ".join(item.name.split("_")[1:]).title())
+
+
+def allure_logger(config) -> AllureReporter:
+    listener: AllureListener = config.pluginmanager.get_plugin("allure_listener")
+    return listener.allure_logger
+
+
+@pytest.hookimpl(hookwrapper=True, trylast=True)
+def pytest_fixture_setup(fixturedef: FixtureDef, request: FixtureRequest):
+    yield
+    logger = allure_logger(request.config)
+    item = logger.get_last_item()
+    scope_letter = fixturedef.scope[0].upper()
+    item.name = f"[{scope_letter}] " + " ".join(fixturedef.argname.split("_")).title()
