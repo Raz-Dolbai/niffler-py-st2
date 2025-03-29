@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.allure_label("Spendings", label_type="epic")]
     description="QA-GURU Python ADVANCED 2",
     currency="RUB",
     category=CategoryAdd(name=TEST_CATEGORY),
-    spendDate="2025-03-01T18:39:27.955Z"))
+    spendDate="2025-03-29T18:39:27.955Z"))
 def test_add_spending(category, spends, spending_page_object: SpendingPage):
     spending_page_object.refresh_page()
     spending_page_object.should_be_expected_text(spends.description)

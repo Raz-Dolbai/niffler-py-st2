@@ -13,12 +13,13 @@ class Category(SQLModel, table=True):
 
 
 class Spend(SQLModel, table=True):
-    id: Optional[str] = Field(default=None, primary_key=True)
-    spendDate: datetime
-    currency: str
+    id: str | None = Field(default=None, primary_key=True)
+    username: str
     amount: float
     description: str
-    # category: Category = Relationship()
+    category_id: str = Field(foreign_key="category.id")
+    spend_date: datetime
+    currency: str
 
 
 class CategoryAdd(BaseModel):
@@ -35,9 +36,3 @@ class SpendAdd(BaseModel):
     amount: float
     description: str
     category: CategoryAdd
-
-
-
-
-
-
