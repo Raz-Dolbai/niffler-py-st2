@@ -1,9 +1,4 @@
-class LoginLocators:
-    USERNAME = "input[name=username]"
-    PASSWORD = "input[name=password]"
-    LOGIN = "button[type=submit]"
-    ERROR_MESSAGE = ".form__error"
-    CREATE_NEW_ACCOUNT = ".form__register"
+
 
 
 class SpendingLocators:

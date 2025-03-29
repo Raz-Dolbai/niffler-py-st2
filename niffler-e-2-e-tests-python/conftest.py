@@ -1,5 +1,4 @@
 import os
-
 import allure
 import pytest
 from pytest import Item, FixtureDef, FixtureRequest
@@ -13,11 +12,11 @@ from models.auth import Auth
 from models.config import Envs
 from faker import Faker
 from models.spend import SpendAdd
-from tests.ui.locators import LoginLocators
 from models.register_model import RegisterModel
 from allure_commons.reporter import AllureReporter
 from allure_commons.types import AttachmentType
 from allure_pytest.listener import AllureListener
+from tests.ui.pages.login_page import LoginPage
 
 
 @pytest.fixture(scope="session")
@@ -49,11 +48,10 @@ def fake_user() -> Auth:
 
 @pytest.fixture(scope="session")
 def auth(envs):
+    page = LoginPage()
     username, password = envs.test_username, envs.test_password
     browser.open(envs.frontend_url)
-    browser.element(LoginLocators.USERNAME).set_value(username)
-    browser.element(LoginLocators.PASSWORD).set_value(password)
-    browser.element(LoginLocators.LOGIN).click()
+    page.login(username, password)
     # получаем токен из Local Storage
     time.sleep(1)
     id_token = browser.driver.execute_script("return window.localStorage.getItem('id_token');")
