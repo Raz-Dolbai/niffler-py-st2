@@ -7,7 +7,6 @@ from requests import Response
 from requests_toolbelt.utils.dump import dump_response
 
 
-
 class SpendsHttpClient:
     session: requests.Session
     base_url: str

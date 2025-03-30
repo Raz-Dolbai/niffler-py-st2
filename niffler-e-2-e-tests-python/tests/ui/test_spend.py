@@ -6,6 +6,8 @@ import pytest
 TEST_CATEGORY = "car"
 
 pytestmark = [pytest.mark.allure_label("Spendings", label_type="epic")]
+
+
 @Pages.main_page
 @TestData.category(TEST_CATEGORY)
 @TestData.spends(SpendAdd(
