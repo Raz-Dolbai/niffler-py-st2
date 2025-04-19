@@ -12,3 +12,4 @@ class Envs(BaseModel):
     test_password: str
     login_url: str
     register_url: str
+    auth_url: str

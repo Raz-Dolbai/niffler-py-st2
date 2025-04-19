@@ -4,6 +4,8 @@ import pytest
 from pytest import Item, FixtureDef, FixtureRequest
 from dotenv import load_dotenv
 from selene import browser
+
+from clients.auth_client import AuthClient
 from clients.spends_client import SpendsHttpClient
 import time
 from databases.spend_db import SpendDb
@@ -32,7 +34,8 @@ def envs() -> Envs:
         test_username=os.getenv("TEST_USERNAME"),
         test_password=os.getenv("TEST_PASSWORD"),
         login_url=os.getenv("LOGIN_URL"),
-        register_url=os.getenv("REGISTER_URL")
+        register_url=os.getenv("REGISTER_URL"),
+        auth_url=os.getenv("AUTH_URL")
 
     )
     allure.attach(envs_instance.model_dump_json(indent=2), name="envs.json", attachment_type=AttachmentType.JSON)
@@ -57,6 +60,12 @@ def auth(envs):
     id_token = browser.driver.execute_script("return window.localStorage.getItem('id_token');")
     assert id_token is not None
     allure.attach(id_token, name="token.txt", attachment_type=AttachmentType.TEXT)
+    return id_token
+
+
+@pytest.fixture(scope="session")
+def auth_api_token(envs):
+    id_token = AuthClient(envs).auth(envs.test_username, envs.test_password)
     return id_token
 
 
@@ -96,9 +105,13 @@ def auth_db(envs) -> AuthDb:
     return AuthDb(envs.auth_db_url)
 
 
+# @pytest.fixture(scope="session")
+# def spends_client(envs, auth) -> SpendsHttpClient:
+#     return SpendsHttpClient(envs.gateway_url, auth)
+
 @pytest.fixture(scope="session")
-def spends_client(envs, auth) -> SpendsHttpClient:
-    return SpendsHttpClient(envs.gateway_url, auth)
+def spends_client(envs, auth_api_token) -> SpendsHttpClient:
+    return SpendsHttpClient(envs.gateway_url, auth_api_token)
 
 
 @pytest.fixture(params=[])
@@ -136,6 +149,8 @@ class Pages:
     login_page = pytest.mark.usefixtures("login_page")
     spending_page = pytest.mark.usefixtures("spending_page")
     register_page = pytest.mark.usefixtures("register_page")
+    main_page_oauth = pytest.mark.usefixtures("main_page_oauth")
+    profile_page_oauth = pytest.mark.usefixtures("profile_page_oauth")
 
 
 class TestData:
@@ -153,6 +168,23 @@ def main_page(auth, envs):
 @pytest.fixture()
 def profile_page(auth, envs):
     browser.open(envs.profile_url)
+
+
+@pytest.fixture()
+def profile_page_oauth(auth_api_token, envs):
+    browser.open(envs.profile_url)
+    browser.execute_script(f"localStorage.setItem('id_token', '{auth_api_token}')")
+    # browser.driver.execute_script(f"localStorage.setItem('id_token', '{auth_api_token}')")
+    browser.open(envs.profile_url)
+
+
+@pytest.fixture()
+def main_page_oauth(auth_api_token, envs):
+    # retrieved_token = browser.execute_script("return localStorage.getItem('id_token');")
+    # assert retrieved_token == auth_api_token, f"Expected {auth_api_token}, but got {retrieved_token}"
+    browser.open(envs.frontend_url)
+    browser.execute_script(f"localStorage.setItem('id_token', '{auth_api_token}')")
+    browser.open(envs.frontend_url)
 
 
 @pytest.fixture()
