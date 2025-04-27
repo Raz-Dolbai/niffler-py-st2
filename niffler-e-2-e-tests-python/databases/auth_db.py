@@ -3,12 +3,14 @@ from sqlalchemy import create_engine, Engine, text
 from sqlmodel import Session
 import allure
 
+from models.config import Envs
+
 
 class AuthDb:
     engine: Engine
 
-    def __init__(self, db_url: str):
-        self.engine_auth_db = create_engine(db_url)
+    def __init__(self, envs: Envs):
+        self.engine_auth_db = create_engine(envs.auth_db_url)
 
     @allure.step("DB: clear authority/user tables")
     def clean_users_db(self):

@@ -1,0 +1,13 @@
+{
+  "frontend_url": "http://frontend.niffler.dc",
+  "gateway_url": "http://gateway.niffler.dc:8090",
+  "spending_url": "http://frontend.niffler.dc/spending",
+  "profile_url": "http://frontend.niffler.dc/profile",
+  "spend_db_url": "postgresql+psycopg2://postgres:secret@localhost:5432/niffler-spend",
+  "auth_db_url": "postgresql+psycopg2://postgres:secret@localhost:5432/niffler-auth",
+  "test_username": "Raz_2_Three",
+  "test_password": "12345",
+  "login_url": "http://auth.niffler.dc:9000/login",
+  "register_url": "http://auth.niffler.dc:9000/register",
+  "auth_url": "http://auth.niffler.dc:9000"
+}

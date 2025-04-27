@@ -1,0 +1,1 @@
+curl -X GET -H 'Accept: */*' -H 'Accept-Encoding: gzip, deflate' -H 'Connection: keep-alive' -H 'Cookie: JSESSIONID=EFC776E5BF7F304AB78D970E38C3EB26' -H 'User-Agent: python-requests/2.32.3' 'http://frontend.niffler.dc/authorized?code=GNU7kkskd0PXQ4ANgBAv2u_MavJrlt9oAswJZ2fzBDDI3TyjN3LZ0ySxx2KyVTa7-FYngh6VfCQ8Fj1bgiFHuf_ouHzOhgZsun-15KU5fm7QvUseVAYk8YwiCzN7qIBF'

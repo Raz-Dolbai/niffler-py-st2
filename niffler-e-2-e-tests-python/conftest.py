@@ -3,26 +3,19 @@ import allure
 import pytest
 from pytest import Item, FixtureDef, FixtureRequest
 from dotenv import load_dotenv
-from selene import browser
 
-from clients.auth_client import AuthClient
-from clients.spends_client import SpendsHttpClient
-import time
-from databases.spend_db import SpendDb
-from databases.auth_db import AuthDb
-from models.auth import Auth
 from models.config import Envs
-from faker import Faker
 from models.spend import SpendAdd
-from models.register_model import RegisterModel
 from allure_commons.reporter import AllureReporter
 from allure_commons.types import AttachmentType
 from allure_pytest.listener import AllureListener
-from tests.ui.pages.login_page import LoginPage
+
+pytest_plugins = ["fixtures.auth_fixtures", "fixtures.client_fixtures", "fixtures.pages_fixtures"]
 
 
 @pytest.fixture(scope="session")
 def envs() -> Envs:
+    # todo разбить на 2 dotenv серверные и клиентские и сделать 2 фикстуры
     load_dotenv()
     envs_instance = Envs(
         frontend_url=os.getenv("FRONTEND_URL"),
@@ -42,76 +35,9 @@ def envs() -> Envs:
     return envs_instance
 
 
-@pytest.fixture(scope="function")
-def fake_user() -> Auth:
-    fake = Faker()
-    user = Auth(username=fake.first_name(), password=fake.password())
-    return user
-
-
-@pytest.fixture(scope="session")
-def auth(envs):
-    page = LoginPage()
-    username, password = envs.test_username, envs.test_password
-    browser.open(envs.frontend_url)
-    page.login(username, password)
-    # получаем токен из Local Storage
-    time.sleep(1)
-    id_token = browser.driver.execute_script("return window.localStorage.getItem('id_token');")
-    assert id_token is not None
-    allure.attach(id_token, name="token.txt", attachment_type=AttachmentType.TEXT)
-    return id_token
-
-
-@pytest.fixture(scope="session")
-def auth_api_token(envs):
-    id_token = AuthClient(envs).auth(envs.test_username, envs.test_password)
-    return id_token
-
-
-@pytest.fixture(params=[])
-def auth_credential(envs, fake_user, request) -> tuple:
-    get_param = request.param
-    if get_param:
-        username, password = envs.test_username, envs.test_password
-    else:
-        username, password = fake_user.username, fake_user.password
-    yield username, password
-
-
-@pytest.fixture(scope="session")
-def register_credential(auth_db) -> RegisterModel:
-    fake = Faker()
-    model = RegisterModel(username=fake.user_name(),
-                          password=fake.password(),
-                          second_password=fake.password())
-    yield model
-    auth_db.clean_users_db()
-
-
-@pytest.fixture(scope="session")
-def register():
-    pass
-
-
-# Создание API и DB клиентов
-@pytest.fixture(scope="session")
-def spend_db(envs) -> SpendDb:
-    return SpendDb(envs.spend_db_url)
-
-
-@pytest.fixture(scope="session")
-def auth_db(envs) -> AuthDb:
-    return AuthDb(envs.auth_db_url)
-
-
 # @pytest.fixture(scope="session")
 # def spends_client(envs, auth) -> SpendsHttpClient:
 #     return SpendsHttpClient(envs.gateway_url, auth)
-
-@pytest.fixture(scope="session")
-def spends_client(envs, auth_api_token) -> SpendsHttpClient:
-    return SpendsHttpClient(envs.gateway_url, auth_api_token)
 
 
 @pytest.fixture(params=[])
@@ -158,48 +84,6 @@ class TestData:
     spends = lambda x: pytest.mark.parametrize("spends", [x], indirect=True, ids=lambda param: param.description)
     auth_with_not_valid_user = pytest.mark.parametrize("auth_credential", [False], indirect=True)
     auth_with_valid_user = pytest.mark.parametrize("auth_credential", [True], indirect=True)
-
-
-@pytest.fixture()
-def main_page(auth, envs):
-    browser.open(envs.frontend_url)
-
-
-@pytest.fixture()
-def profile_page(auth, envs):
-    browser.open(envs.profile_url)
-
-
-@pytest.fixture()
-def profile_page_oauth(auth_api_token, envs):
-    browser.open(envs.profile_url)
-    browser.execute_script(f"localStorage.setItem('id_token', '{auth_api_token}')")
-    # browser.driver.execute_script(f"localStorage.setItem('id_token', '{auth_api_token}')")
-    browser.open(envs.profile_url)
-
-
-@pytest.fixture()
-def main_page_oauth(auth_api_token, envs):
-    # retrieved_token = browser.execute_script("return localStorage.getItem('id_token');")
-    # assert retrieved_token == auth_api_token, f"Expected {auth_api_token}, but got {retrieved_token}"
-    browser.open(envs.frontend_url)
-    browser.execute_script(f"localStorage.setItem('id_token', '{auth_api_token}')")
-    browser.open(envs.frontend_url)
-
-
-@pytest.fixture()
-def login_page(envs):
-    browser.open(envs.login_url)
-
-
-@pytest.fixture()
-def register_page(envs):
-    browser.open(envs.register_url)
-
-
-@pytest.fixture()
-def spending_page(auth, envs):
-    browser.open(envs.spending_url)
 
 
 @pytest.hookimpl(hookwrapper=True, trylast=True)
