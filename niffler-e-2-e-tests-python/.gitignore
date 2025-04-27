@@ -174,3 +174,4 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 /allure-result/
+/tests/api/allure-result/

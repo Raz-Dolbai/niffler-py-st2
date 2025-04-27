@@ -1,1 +1,0 @@
-curl -X GET -H 'Accept: */*' -H 'Accept-Encoding: gzip, deflate' -H 'Connection: keep-alive' -H 'Cookie: JSESSIONID=EFC776E5BF7F304AB78D970E38C3EB26' -H 'User-Agent: python-requests/2.32.3' http://auth.niffler.dc:9000/login
