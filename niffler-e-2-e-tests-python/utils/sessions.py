@@ -58,7 +58,7 @@ def allure_attach_request(function):
 
             )
 
-        raise_for_status(response)
+        # raise_for_status(response)
         return response
 
     return wrapper

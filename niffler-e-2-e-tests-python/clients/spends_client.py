@@ -1,8 +1,11 @@
+from typing import Union
+
 import requests
 import allure
 from models.config import Envs
 from models.spend import SpendAdd
-from models.category import CategoryAdd
+from models.category import CategoryAdd, CategoryError
+from http import HTTPStatus
 from allure_commons.types import AttachmentType
 from requests import Response
 from requests_toolbelt.utils.dump import dump_response
@@ -32,13 +35,15 @@ class SpendsHttpClient:
     #     allure.attach(dump_response(response), attachment_name, attachment_type=AttachmentType.TEXT)
 
     @allure.step("HTTP: add category")
-    def add_category(self, name: str) -> CategoryAdd:
-        response = self.session.post("/api/categories/add", json={"name": name})
+    def add_category(self, category_model: CategoryAdd) -> Union[CategoryAdd, CategoryError]:
+        response = self.session.post("/api/categories/add", json=category_model.model_dump())
+        if response.status_code != HTTPStatus.OK:
+            return CategoryError.model_validate(response.json())
         return CategoryAdd.model_validate(response.json())
 
     @allure.step("HTTP: get category")
-    def get_categories(self) -> list[CategoryAdd]:
-        response = self.session.get("/api/categories/all")
+    def get_categories(self, params: dict = None) -> list[CategoryAdd]:
+        response = self.session.get("/api/categories/all", params=params)
         return [CategoryAdd.model_validate(item) for item in response.json()]
 
     @allure.step("HTTP: add spend")
@@ -65,4 +70,4 @@ class SpendsHttpClient:
     @allure.step("HTTP: update category")
     def update_categories(self, body: dict):
         response = self.session.patch("/api/categories/update", json=body)
-        return response.json()
+        return CategoryAdd.model_validate(response.json())

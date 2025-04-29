@@ -1,14 +1,19 @@
+import base64
 import os
 import allure
 import pytest
 from pytest import Item, FixtureDef, FixtureRequest
 from dotenv import load_dotenv
 
+from clients.user_client import UsersHttpClient
+from models.category import CategoryAdd
 from models.config import Envs
 from models.spend import SpendAdd
 from allure_commons.reporter import AllureReporter
 from allure_commons.types import AttachmentType
 from allure_pytest.listener import AllureListener
+
+from models.user import User
 
 pytest_plugins = ["fixtures.auth_fixtures", "fixtures.client_fixtures", "fixtures.pages_fixtures"]
 
@@ -41,10 +46,10 @@ def envs() -> Envs:
 
 
 @pytest.fixture(params=[])
-def category(request, spends_client, spend_db) -> str:
+def category(request, spends_client, spend_db) -> CategoryAdd:
     category_name = request.param
-    category = spends_client.add_category(category_name)
-    yield category.name
+    category = spends_client.add_category(CategoryAdd(name=category_name))
+    yield category
     spend_db.delete_category(category.id)
 
 
@@ -52,6 +57,28 @@ def category(request, spends_client, spend_db) -> str:
 def category_db_clean(spend_db):
     yield
     spend_db.clean_category_db()
+
+
+@pytest.fixture()
+def current_user(user_client: UsersHttpClient) -> User:
+    current_user = user_client.get_current_user()
+    return User.model_validate(current_user)
+
+
+@pytest.fixture()
+def image_to_base64():
+    """Конвертирует изображение в строку base64.
+    Returns:
+        Строку base64, представляющую изображение, или None, если файл не найден.
+    """
+    try:
+        current_file_dir = os.path.dirname(os.path.abspath(__file__))
+        image_path = os.path.join(current_file_dir, "static", "astronaut.png")
+        with open(image_path, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+            return "data:image/png;base64,{}".format(encoded_string)
+    except FileNotFoundError:
+        return ""
 
 
 @pytest.fixture()

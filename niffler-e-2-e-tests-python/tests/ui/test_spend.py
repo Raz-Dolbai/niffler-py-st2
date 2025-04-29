@@ -47,7 +47,7 @@ def test_update_spending(category, spends, spending_page_object: SpendingPage):
                           description='QA-GURU Python ADVANCED 2',
                           category=CategoryAdd(name=Category.SCHOOL),
                           currency="RUB",
-                          spendDate="2025-03-01T18:39:27.955Z"
+                          spendDate="2025-03-01T18:39:27.955Z" # todo сгенерировать дату самостоятельно
                           ))
 def test_delete_spending(category, spends, spending_page_object: SpendingPage):
     spending_page_object.refresh_page()
