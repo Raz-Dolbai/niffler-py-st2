@@ -1,7 +1,8 @@
 from conftest import TestData, Pages
 from databases.spend_db import SpendDb
 from models.config import Envs
-from models.spend import SpendAdd, CategoryAdd
+from models.spend import SpendAdd
+from models.category import CategoryAdd
 
 TEST_CATEGORY = "TestCategory"
 

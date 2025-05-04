@@ -1,20 +1,20 @@
 from conftest import Pages, TestData
-from models.spend import SpendAdd, CategoryAdd
+from models.enums import Category
+from models.spend import SpendAdd
+from models.category import CategoryAdd
 from tests.ui.pages.spending_page import SpendingPage
 import pytest
-
-TEST_CATEGORY = "car"
 
 pytestmark = [pytest.mark.allure_label("Spendings", label_type="epic")]
 
 
 @Pages.main_page
-@TestData.category(TEST_CATEGORY)
+@TestData.category(Category.SCHOOL)
 @TestData.spends(SpendAdd(
     amount=108.51,
     description="QA-GURU Python ADVANCED 2",
     currency="RUB",
-    category=CategoryAdd(name=TEST_CATEGORY),
+    category=CategoryAdd(name=Category.SCHOOL),
     spendDate="2025-03-29T18:39:27.955Z"))
 def test_add_spending(category, spends, spending_page_object: SpendingPage):
     spending_page_object.refresh_page()
@@ -24,12 +24,12 @@ def test_add_spending(category, spends, spending_page_object: SpendingPage):
 
 
 @Pages.main_page
-@TestData.category(TEST_CATEGORY)
+@TestData.category(Category.SCHOOL)
 @TestData.spends(SpendAdd(amount=108.51,
                           description='QA-GURU Python ADVANCED 2',
-                          category=CategoryAdd(name=TEST_CATEGORY),
+                          category=CategoryAdd(name=Category.SCHOOL),
                           currency="RUB",
-                          spendDate="2025-03-01T18:39:27.955Z"
+                          spendDate="2025-03-01T18:39:27.955Z"  # todo сгенерировать дату самостоятельно
                           ))
 def test_update_spending(category, spends, spending_page_object: SpendingPage):
     spending_page_object.refresh_page()
@@ -42,12 +42,12 @@ def test_update_spending(category, spends, spending_page_object: SpendingPage):
 
 
 @Pages.main_page
-@TestData.category(TEST_CATEGORY)
+@TestData.category(Category.SCHOOL)
 @TestData.spends(SpendAdd(amount=108.51,
                           description='QA-GURU Python ADVANCED 2',
-                          category=CategoryAdd(name=TEST_CATEGORY),
+                          category=CategoryAdd(name=Category.SCHOOL),
                           currency="RUB",
-                          spendDate="2025-03-01T18:39:27.955Z"
+                          spendDate="2025-03-01T18:39:27.955Z" # todo сгенерировать дату самостоятельно
                           ))
 def test_delete_spending(category, spends, spending_page_object: SpendingPage):
     spending_page_object.refresh_page()

@@ -4,6 +4,8 @@ from conftest import Pages
 from tests.ui.pages.register_page import RegisterPage
 
 pytestmark = [pytest.mark.allure_label("Register", label_type="epic")]
+
+
 @Pages.register_page
 def test_register_with_valid_data(register_credential, register_page_object: RegisterPage):
     register_page_object.register_user(register_credential.username,

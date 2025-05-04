@@ -1,6 +1,7 @@
 from conftest import Pages, TestData
 from tests.ui.pages.profile_page import ProfilePage
 from faker import Faker
+from models.enums import Category
 import pytest
 
 fake = Faker()
@@ -16,14 +17,14 @@ def test_title_in_page(profile_page_object: ProfilePage):
 
 @Pages.profile_page
 def test_add_categories(category_db_clean, profile_page_object: ProfilePage):
-    profile_page_object.add_category(TEST_CATEGORY)
-    profile_page_object.should_have_category(TEST_CATEGORY)
+    profile_page_object.add_category(Category.SCHOOL)
+    profile_page_object.should_have_category(Category.SCHOOL)
 
 
 @Pages.profile_page
-@TestData.category(TEST_CATEGORY)
+@TestData.category(Category.SCHOOL)
 def test_update_categories(category, profile_page_object: ProfilePage):
-    name_category = category
+    name_category = category.name
     profile_page_object.click_edit_category(name_category)
     profile_page_object.clear_category()
     profile_page_object.update_category()

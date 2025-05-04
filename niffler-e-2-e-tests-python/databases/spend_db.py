@@ -3,15 +3,18 @@ from typing import Sequence
 from sqlalchemy import create_engine, Engine, text, event
 from sqlmodel import Session, select
 from allure_commons.types import AttachmentType
-from models.spend import Category, Spend
+
+from models.config import Envs
+from models.spend import Spend
+from models.category import Category
 import allure
 
 
 class SpendDb:
     engine: Engine
 
-    def __init__(self, db_url: str):
-        self.engine = create_engine(db_url)
+    def __init__(self, envs: Envs):
+        self.engine = create_engine(envs.spend_db_url)
         event.listen(self.engine, "do_execute", fn=self.attach_sql)
 
     @staticmethod
