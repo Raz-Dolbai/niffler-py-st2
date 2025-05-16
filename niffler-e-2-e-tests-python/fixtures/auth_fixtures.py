@@ -53,5 +53,5 @@ def register_credential(auth_db) -> RegisterModel:
 @pytest.fixture(scope="function")
 def fake_user() -> Auth:
     fake = Faker()
-    user = Auth(username=fake.first_name(), password=fake.password())
+    user = Auth(username=fake.first_name(), password=fake.password(special_chars=False))
     return user

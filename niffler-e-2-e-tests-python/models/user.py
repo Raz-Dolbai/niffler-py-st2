@@ -5,7 +5,7 @@ from sqlalchemy import MetaData
 from sqlmodel import SQLModel, Field
 
 
-class User(BaseModel):
+class UserModel(BaseModel):
     id: Optional[str] = None
     username: Optional[str] = None
     firstname: Optional[str] = None
@@ -21,7 +21,7 @@ class UserName(BaseModel):
     username: str
 
 
-class UserDB(SQLModel, table=True):
+class User(SQLModel, table=True):
     metadata = MetaData()
     id: str = Field(default=None, primary_key=True)
     username: str
@@ -33,3 +33,5 @@ class UserDB(SQLModel, table=True):
     photo_small: str | None = None
     full_name: str
     __table_args__ = {"extend_existing": True}
+
+

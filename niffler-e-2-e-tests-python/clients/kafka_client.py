@@ -102,7 +102,7 @@ class KafkaClient:
                 f"Offset {msg.offset()}"
             )
 
-    def sent_event(self, topic, username):
+    def produce_event(self, topic, username):
         self.producer.produce(
             topic,
             json.dumps({"username": str(username)}).encode("utf-8"),

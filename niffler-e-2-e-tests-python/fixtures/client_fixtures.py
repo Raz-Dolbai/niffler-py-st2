@@ -6,6 +6,7 @@ from clients.kafka_client import KafkaClient
 from clients.oauth_client import OAuthClient
 from databases.auth_db import AuthDb
 from databases.spend_db import SpendDb
+from databases.userdata_db import UserdataDb
 from models.config import Envs
 
 
@@ -17,6 +18,11 @@ def spend_db(envs: Envs) -> SpendDb:
 @pytest.fixture(scope="session")
 def auth_db(envs: Envs) -> AuthDb:
     return AuthDb(envs)
+
+
+@pytest.fixture(scope="session")
+def userdata_db(envs: Envs) -> UserdataDb:
+    return UserdataDb(envs)
 
 
 @pytest.fixture(scope="session")

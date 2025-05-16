@@ -34,7 +34,8 @@ def envs() -> Envs:
         login_url=os.getenv("LOGIN_URL"),
         register_url=os.getenv("REGISTER_URL"),
         auth_url=os.getenv("AUTH_URL"),
-        kafka_address=os.getenv("KAFKA_ADDRESS")
+        kafka_address=os.getenv("KAFKA_ADDRESS"),
+        userdata_db_url=os.getenv("USERDATA_DB_URL")
 
     )
     allure.attach(envs_instance.model_dump_json(indent=2), name="envs.json", attachment_type=AttachmentType.JSON)
