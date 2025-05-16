@@ -1,13 +1,12 @@
 import json
 import logging
-from typing import Sequence
 
 from confluent_kafka import TopicPartition
 from confluent_kafka.admin import AdminClient
 from confluent_kafka.cimpl import NewTopic, Consumer, Producer
 
 from utils.waiters import wait_until_timeout
-
+import datetime
 
 class KafkaClient:
     """Класс для взаимодействия с кафкой"""
@@ -21,10 +20,10 @@ class KafkaClient:
     ):
         self.server = envs.kafka_address
         self.admin = AdminClient(
-            {"bootstrap.servers": f"{self.server}:9092"}
+            {"bootstrap.servers": f"{self.server}:9093"}
         )
         self.producer = Producer(
-            {"bootstrap.servers": f"{self.server}:9092"}
+            {"bootstrap.servers": f"{self.server}:9093"}
         )
         self.consumer = Consumer(
             {
@@ -110,3 +109,15 @@ class KafkaClient:
             headers={"__TypeId__": "guru.qa.niffler.model.UserJson"},
         )
         self.producer.flush()
+
+
+    # def sent_event(self, topic, user_data: dict):
+    #     user_data["produced_at"] = datetime.datetime.now(datetime.UTC).isoformat()
+    #
+    #     self.producer.produce(
+    #         topic,
+    #         key=str(user_data["username"]),
+    #         value=json.dumps(user_data),
+    #         callback=self.delivery_report,
+    #     )
+    #     self.producer.flush()

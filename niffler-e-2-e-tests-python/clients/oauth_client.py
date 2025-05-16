@@ -55,7 +55,7 @@ class OAuthClient:
         self.token = token_response.json().get("id_token", None)
         return self.token
 
-    def register(self, username, password):
+    def register(self, username: str, password: str):
         self.session.get(
             url="/register",
             params={
@@ -65,7 +65,7 @@ class OAuthClient:
         )
 
         result = self.session.post(
-            url=f"/register",
+            url="/register",
             data={
                 "username": username,
                 "password": password,

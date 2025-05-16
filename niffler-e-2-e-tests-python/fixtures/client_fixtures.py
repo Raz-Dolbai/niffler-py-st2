@@ -31,7 +31,8 @@ def user_client(envs: Envs, auth_api_token) -> UsersHttpClient:
 
 @pytest.fixture(scope="session")
 def kafka_client(envs: Envs) -> KafkaClient:
-    return KafkaClient(envs)
+    with KafkaClient(envs) as k:
+        yield k
 
 
 @pytest.fixture(scope="session")
