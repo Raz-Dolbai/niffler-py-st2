@@ -1,9 +1,10 @@
 from typing import Sequence
-from sqlalchemy import create_engine, Engine, text
+from sqlalchemy import create_engine, Engine, text, select
 from sqlmodel import Session
 import allure
 
 from models.config import Envs
+from models.auth import User
 
 
 class AuthDb:
@@ -18,3 +19,12 @@ class AuthDb:
             session.execute(text('DELETE FROM public."authority";'))
             session.execute(text('DELETE FROM public."user";'))
             session.commit()
+
+    def get_user_by_username(self, username: str) -> User | None:
+        with Session(self.engine_auth_db) as session:
+            statement = select(User).where(User.username == username)
+            try:
+                user = session.exec(statement).one()
+            except Exception:
+                user = None
+            return user

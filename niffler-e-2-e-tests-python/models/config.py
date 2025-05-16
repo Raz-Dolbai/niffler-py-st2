@@ -13,3 +13,5 @@ class Envs(BaseModel):
     login_url: str
     register_url: str
     auth_url: str
+    kafka_address: str
+    userdata_db_url: str
