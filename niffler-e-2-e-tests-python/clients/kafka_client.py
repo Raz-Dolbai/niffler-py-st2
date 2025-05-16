@@ -21,10 +21,10 @@ class KafkaClient:
     ):
         self.server = envs.kafka_address
         self.admin = AdminClient(
-            {"bootstrap.servers": f"{self.server}:9092"}
+            {"bootstrap.servers": f"{self.server}:9093"}
         )
         self.producer = Producer(
-            {"bootstrap.servers": f"{self.server}:9092"}
+            {"bootstrap.servers": f"{self.server}:9093"}
         )
         self.consumer = Consumer(
             {
