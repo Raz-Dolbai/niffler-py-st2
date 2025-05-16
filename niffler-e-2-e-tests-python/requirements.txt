@@ -11,3 +11,4 @@ allure-pytest=2.13.5
 requests-toolbelt=1.0.0
 curlify=2.2.1
 pkce=1.0.3
+grpcio-tools=1.69.0

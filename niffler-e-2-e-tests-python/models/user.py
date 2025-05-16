@@ -13,3 +13,7 @@ class User(BaseModel):
     photo: Optional[str] = None
     photoSmall: Optional[str] = None
     friendshipStatus: Optional[str] = "INVITE_SENT"
+
+
+class UserName(BaseModel):
+    username: str

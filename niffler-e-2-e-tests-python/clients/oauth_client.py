@@ -54,3 +54,24 @@ class OAuthClient:
         token_response.raise_for_status()
         self.token = token_response.json().get("id_token", None)
         return self.token
+
+    def register(self, username, password):
+        self.session.get(
+            url="/register",
+            params={
+                "redirect_uri": "http://auth.niffler.dc:9000/register",
+            },
+            allow_redirects=True
+        )
+
+        result = self.session.post(
+            url=f"/register",
+            data={
+                "username": username,
+                "password": password,
+                "passwordSubmit": password,
+                "_csrf": self.session.cookies.get("XSRF-TOKEN")
+            },
+            allow_redirects=True
+        )
+        return result
